@@ -1,0 +1,6 @@
+bin/
+target/
+*.class
+.idea/
+.vscode/
+Community Skill Finder.pdf
