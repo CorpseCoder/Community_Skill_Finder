@@ -105,7 +105,7 @@ public class ConsoleApp {
         }
         System.out.println("\n--- REGISTERED USERS ---");
         for (User u : users) {
-            System.out.printf("[%d] %s (%s) - %s%n", u.getUserId(), u.getName(), u.getEmail(), u.getBio() != null ? u.getBio() : "");
+            System.out.printf("[%d] %s - %s%n", u.getUserId(), u.getName(), u.getBio() != null ? u.getBio() : "");
         }
         System.out.print("\nEnter User ID to quickly log in (or press Enter to cancel): ");
         String line = scanner.nextLine().trim();
@@ -125,7 +125,7 @@ public class ConsoleApp {
 
     private boolean showMainMenu() throws SQLException {
         System.out.println("\n======================================================================");
-        System.out.println(" LOGGED IN AS: " + currentUser.getName() + " <" + currentUser.getEmail() + "> (ID: " + currentUser.getUserId() + ")");
+        System.out.println(" LOGGED IN AS: " + currentUser.getName() + " <  (ID: " + currentUser.getUserId() + ")");
         System.out.println("======================================================================");
         System.out.println("1. View My Profile & Skill Inventory");
         System.out.println("2. Manage Skills I Can TEACH (Add / Remove)");
