@@ -19,6 +19,7 @@ CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
     bio TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -82,12 +83,12 @@ INSERT INTO skills (skill_name, category) VALUES
 ('Git', 'Tools & Version Control'),
 ('Machine Learning', 'Data Science & AI');
 
--- Sample Users
-INSERT INTO users (name, email, bio) VALUES
-('Alice Johnson', 'alice@example.com', 'Backend enthusiast with deep Java experience. Keen to master SQL optimization.'),
-('Bob Smith', 'bob@example.com', 'Database administrator wanting to level up backend application development with Java.'),
-('Charlie Brown', 'charlie@example.com', 'Frontend dev learning Python for data analysis.'),
-('Diana Prince', 'diana@example.com', 'Python and ML researcher eager to learn React for building dashboards.');
+-- Sample Users (password_hash is a placeholder seed value; auth not yet implemented)
+INSERT INTO users (name, email, password_hash, bio) VALUES
+('Alice Johnson', 'alice@example.com', 'pbkdf2:sha256:210000:c2FsdA==:aGFzaA==', 'Backend enthusiast with deep Java experience. Keen to master SQL optimization.'),
+('Bob Smith', 'bob@example.com', 'pbkdf2:sha256:210000:c2FsdA==:aGFzaA==', 'Database administrator wanting to level up backend application development with Java.'),
+('Charlie Brown', 'charlie@example.com', 'pbkdf2:sha256:210000:c2FsdA==:aGFzaA==', 'Frontend dev learning Python for data analysis.'),
+('Diana Prince', 'diana@example.com', 'pbkdf2:sha256:210000:c2FsdA==:aGFzaA==', 'Python and ML researcher eager to learn React for building dashboards.');
 
 -- Teaching skills
 -- Alice teaches Java (Bob wants this)

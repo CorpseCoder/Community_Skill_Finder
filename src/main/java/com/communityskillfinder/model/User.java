@@ -6,15 +6,17 @@ public class User {
     private int userId;
     private String name;
     private String email;
+    private String passwordHash;
     private String bio;
     private Timestamp createdAt;
 
     public User() {}
 
-    public User(int userId, String name, String email, String bio, Timestamp createdAt) {
+    public User(int userId, String name, String email, String passwordHash, String bio, Timestamp createdAt) {
         this.userId = userId;
         this.name = name;
         this.email = email;
+        this.passwordHash = passwordHash;
         this.bio = bio;
         this.createdAt = createdAt;
     }
@@ -22,6 +24,13 @@ public class User {
     public User(String name, String email, String bio) {
         this.name = name;
         this.email = email;
+        this.bio = bio;
+    }
+
+    public User(String name, String email, String passwordHash, String bio) {
+        this.name = name;
+        this.email = email;
+        this.passwordHash = passwordHash;
         this.bio = bio;
     }
 
@@ -47,6 +56,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getBio() {

@@ -6,6 +6,7 @@ import com.communityskillfinder.dao.UserTeachSkillDAO;
 import com.communityskillfinder.model.User;
 import com.communityskillfinder.model.UserLearnSkill;
 import com.communityskillfinder.model.UserTeachSkill;
+import com.communityskillfinder.util.PasswordUtil;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -16,19 +17,23 @@ public class UserService {
     private final UserTeachSkillDAO teachSkillDAO = new UserTeachSkillDAO();
     private final UserLearnSkillDAO learnSkillDAO = new UserLearnSkillDAO();
 
-    public User registerUser(String name, String email, String bio) throws SQLException {
+    public User registerUser(String name, String email, String bio, String password) throws SQLException {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Name cannot be empty.");
         }
         if (email == null || !email.contains("@")) {
             throw new IllegalArgumentException("Invalid email format.");
         }
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be empty.");
+        }
         Optional<User> existing = userDAO.findByEmail(email.trim());
         if (existing.isPresent()) {
             throw new IllegalArgumentException("A user with email " + email + " already exists.");
         }
 
-        User user = new User(name.trim(), email.trim(), bio != null ? bio.trim() : "");
+        String passwordHash = PasswordUtil.hash(password.trim());
+        User user = new User(name.trim(), email.trim(), passwordHash, bio != null ? bio.trim() : "");
         return userDAO.createUser(user);
     }
 

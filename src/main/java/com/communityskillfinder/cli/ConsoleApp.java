@@ -86,11 +86,13 @@ public class ConsoleApp {
         String name = scanner.nextLine().trim();
         System.out.print("Enter your email: ");
         String email = scanner.nextLine().trim();
+        System.out.print("Enter a password: ");
+        String password = scanner.nextLine().trim();
         System.out.print("Enter a short bio: ");
         String bio = scanner.nextLine().trim();
 
         try {
-            currentUser = userService.registerUser(name, email, bio);
+            currentUser = userService.registerUser(name, email, bio, password);
             System.out.println("\n[+] Registration successful! Logged in as " + currentUser.getName() + " (ID: " + currentUser.getUserId() + ")");
         } catch (IllegalArgumentException e) {
             System.out.println("[!] Registration failed: " + e.getMessage());
