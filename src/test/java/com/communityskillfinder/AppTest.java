@@ -1,5 +1,8 @@
 package com.communityskillfinder;
 
+import com.communityskillfinder.exception.DuplicatePartnershipRequestException;
+import com.communityskillfinder.exception.InvalidPartnershipStateException;
+import com.communityskillfinder.exception.UnauthorizedPartnershipActionException;
 import com.communityskillfinder.service.UserService;
 import com.communityskillfinder.service.PartnershipService;
 import com.communityskillfinder.service.MatchingService;
@@ -58,6 +61,9 @@ public class AppTest {
             Optional<User> u = us.getUserByEmail("alicetest@example.com");
             check("Alice found by email", u.isPresent());
             check("Alice email matches", u.map(User::getEmail).orElse("").equals("alicetest@example.com"));
+            check("Correct password authenticates", us.authenticate("alicetest@example.com", "password123").isPresent());
+            check("Wrong password rejected", us.authenticate("alicetest@example.com", "wrong").isEmpty());
+            check("Unknown email rejected", us.authenticate("nobody@example.com", "password123").isEmpty());
         } catch (Exception e) { check("Alice found by email", false); System.out.println("    " + e.getMessage()); }
 
         System.out.println("\n=== Test 3: Password hash stored in DB ===");
@@ -107,10 +113,24 @@ public class AppTest {
             check("Partnership created", p.getPartnershipId() > 0);
             check("Partnership status PENDING", p.getStatus().equals("PENDING"));
             int pid = p.getPartnershipId();
+            check("Partnership sender is Alice", p.getSenderId() == 5);
+            check("Partnership recipient is Bob", p.getRecipientId() == 6);
+
+            boolean duplicateRejected = false;
+            try { ps.requestPartnership(5, 6, 1); } catch (DuplicatePartnershipRequestException ex) { duplicateRejected = true; }
+            check("Duplicate active request rejected", duplicateRejected);
 
             // View partnerships
             List<Partnership> aliceParts = ps.getUserPartnerships(5);
             check("Alice sees partnership", aliceParts.stream().anyMatch(pp -> pp.getPartnershipId() == pid));
+
+            boolean senderCannotAccept = false;
+            try { ps.acceptPartnership(pid, 5); } catch (UnauthorizedPartnershipActionException ex) { senderCannotAccept = true; }
+            check("Sender cannot accept own request", senderCannotAccept);
+
+            boolean strangerCannotAccept = false;
+            try { ps.acceptPartnership(pid, 999); } catch (UnauthorizedPartnershipActionException ex) { strangerCannotAccept = true; }
+            check("Unrelated user cannot accept request", strangerCannotAccept);
 
             // Bob accepts
             boolean accepted = ps.acceptPartnership(pid, 6);
@@ -120,9 +140,13 @@ public class AppTest {
             Optional<Partnership> updated = ps.getPartnershipById(pid);
             check("Partnership status ACCEPTED", updated.map(Partnership::getStatus).orElse("").equals("ACCEPTED"));
 
-            // Bob can't accept again (already accepted - should still work as update)
-            boolean accepted2 = ps.acceptPartnership(pid, 6);
-            check("Re-accept doesn't crash", true);
+            boolean reAcceptRejected = false;
+            try { ps.acceptPartnership(pid, 6); } catch (InvalidPartnershipStateException ex) { reAcceptRejected = true; }
+            check("Re-accept after ACCEPTED rejected", reAcceptRejected);
+
+            boolean rejectAfterAcceptRejected = false;
+            try { ps.rejectPartnership(pid, 6); } catch (InvalidPartnershipStateException ex) { rejectAfterAcceptRejected = true; }
+            check("Reject after ACCEPTED rejected", rejectAfterAcceptRejected);
 
             // Cancel
             boolean cancelled = ps.cancelPartnership(pid, 6);
@@ -158,7 +182,15 @@ public class AppTest {
             check("Reject partnership", rejected);
             check("Rejected status", ps.getPartnershipById(p1.getPartnershipId()).map(Partnership::getStatus).orElse("").equals("REJECTED"));
 
+            boolean acceptRejected = false;
+            try { ps.acceptPartnership(p1.getPartnershipId(), 5); } catch (InvalidPartnershipStateException ex) { acceptRejected = true; }
+            check("Accept after REJECTED rejected", acceptRejected);
+
             Partnership p2 = ps.requestPartnership(5, 6, 2);
+            boolean completePendingRejected = false;
+            try { ps.completePartnership(p2.getPartnershipId(), 5); } catch (InvalidPartnershipStateException ex) { completePendingRejected = true; }
+            check("Complete while PENDING rejected", completePendingRejected);
+            check("Recipient accepts before completion", ps.acceptPartnership(p2.getPartnershipId(), 6));
             boolean completed = ps.completePartnership(p2.getPartnershipId(), 5);
             check("Complete partnership", completed);
             check("Completed status", ps.getPartnershipById(p2.getPartnershipId()).map(Partnership::getStatus).orElse("").equals("COMPLETED"));
@@ -183,6 +215,14 @@ public class AppTest {
             boolean invalidPrio = false;
             try { us.addLearnSkill(5, 1, "URGENT"); } catch (IllegalArgumentException ie) { invalidPrio = true; }
             check("Invalid priority rejected", invalidPrio);
+
+            boolean invalidProfileEmail = false;
+            try { us.updateProfile(5, "Alice", "bad-email", "bio"); } catch (IllegalArgumentException ie) { invalidProfileEmail = true; }
+            check("Invalid profile email rejected", invalidProfileEmail);
+
+            boolean duplicateProfileEmail = false;
+            try { us.updateProfile(5, "Alice", "bobtest@example.com", "bio"); } catch (IllegalArgumentException ie) { duplicateProfileEmail = true; }
+            check("Duplicate profile email rejected", duplicateProfileEmail);
 
             boolean notFound = false;
             try { ps.acceptPartnership(99999, 5); } catch (IllegalArgumentException ie) { notFound = true; }

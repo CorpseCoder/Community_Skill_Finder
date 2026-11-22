@@ -45,6 +45,17 @@ public class UserService {
         return userDAO.findByEmail(email.trim());
     }
 
+    public Optional<User> authenticate(String email, String password) throws SQLException {
+        if (email == null || email.trim().isEmpty() || password == null) {
+            return Optional.empty();
+        }
+        Optional<User> user = userDAO.findByEmail(email.trim());
+        if (user.isEmpty()) {
+            return Optional.empty();
+        }
+        return PasswordUtil.verify(password, user.get().getPasswordHash()) ? user : Optional.empty();
+    }
+
     public List<User> getAllUsers() throws SQLException {
         return userDAO.findAll();
     }
@@ -55,8 +66,23 @@ public class UserService {
             return false;
         }
         User user = optionalUser.get();
-        if (name != null && !name.trim().isEmpty()) user.setName(name.trim());
-        if (email != null && email.contains("@")) user.setEmail(email.trim());
+        if (name != null) {
+            if (name.trim().isEmpty()) {
+                throw new IllegalArgumentException("Name cannot be empty.");
+            }
+            user.setName(name.trim());
+        }
+        if (email != null) {
+            String normalizedEmail = email.trim();
+            if (!normalizedEmail.contains("@")) {
+                throw new IllegalArgumentException("Invalid email format.");
+            }
+            Optional<User> emailOwner = userDAO.findByEmail(normalizedEmail);
+            if (emailOwner.isPresent() && emailOwner.get().getUserId() != userId) {
+                throw new IllegalArgumentException("A user with email " + normalizedEmail + " already exists.");
+            }
+            user.setEmail(normalizedEmail);
+        }
         if (bio != null) user.setBio(bio.trim());
         return userDAO.update(user);
     }

@@ -56,16 +56,19 @@ CREATE TABLE user_learn_skills (
 -- 5. Partnerships Table (Lifecycle Management)
 CREATE TABLE partnerships (
     partnership_id INT AUTO_INCREMENT PRIMARY KEY,
+    requested_by INT NOT NULL,
     mentor_id INT NOT NULL,
     mentee_id INT NOT NULL,
     skill_id INT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_partner_requested_by FOREIGN KEY (requested_by) REFERENCES users(user_id) ON DELETE CASCADE,
     CONSTRAINT fk_partner_mentor FOREIGN KEY (mentor_id) REFERENCES users(user_id) ON DELETE CASCADE,
     CONSTRAINT fk_partner_mentee FOREIGN KEY (mentee_id) REFERENCES users(user_id) ON DELETE CASCADE,
     CONSTRAINT fk_partner_skill FOREIGN KEY (skill_id) REFERENCES skills(skill_id) ON DELETE SET NULL,
     CONSTRAINT chk_status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'COMPLETED')),
-    CONSTRAINT chk_different_users CHECK (mentor_id <> mentee_id)
+    CONSTRAINT chk_different_users CHECK (mentor_id <> mentee_id),
+    CONSTRAINT chk_requested_by CHECK (requested_by IN (mentor_id, mentee_id))
 ) ENGINE=InnoDB;
 
 -- =====================================================================
@@ -83,12 +86,12 @@ INSERT INTO skills (skill_name, category) VALUES
 ('Git', 'Tools & Version Control'),
 ('Machine Learning', 'Data Science & AI');
 
--- Sample Users (password_hash is a placeholder seed value; auth not yet implemented)
+-- Sample Users (demo password for all seeded accounts: password123)
 INSERT INTO users (name, email, password_hash, bio) VALUES
-('Alice Johnson', 'alice@example.com', 'pbkdf2:sha256:210000:c2FsdA==:aGFzaA==', 'Backend enthusiast with deep Java experience. Keen to master SQL optimization.'),
-('Bob Smith', 'bob@example.com', 'pbkdf2:sha256:210000:c2FsdA==:aGFzaA==', 'Database administrator wanting to level up backend application development with Java.'),
-('Charlie Brown', 'charlie@example.com', 'pbkdf2:sha256:210000:c2FsdA==:aGFzaA==', 'Frontend dev learning Python for data analysis.'),
-('Diana Prince', 'diana@example.com', 'pbkdf2:sha256:210000:c2FsdA==:aGFzaA==', 'Python and ML researcher eager to learn React for building dashboards.');
+('Alice Johnson', 'alice@example.com', 'pbkdf2:sha256:210000:0vVubhtKfRPPmJDfJscIKg==:FY63FPkmfMFCiwylnJTp6LFi2vQ8FmVX62LcA83D/W4=', 'Backend enthusiast with deep Java experience. Keen to master SQL optimization.'),
+('Bob Smith', 'bob@example.com', 'pbkdf2:sha256:210000:E1JOW9tP9PBRwS7CJsQOvA==:0fXJGH0QJgGgVoP9G2nb6/FPBLekqp4rQgpFj1Oq76s=', 'Database administrator wanting to level up backend application development with Java.'),
+('Charlie Brown', 'charlie@example.com', 'pbkdf2:sha256:210000:prH8mBPLBb6NgD5u5cnUog==:3vEuRRLsbt/K2aCgwQC7JFQDEVtRrYqnKnr5ag9LBQ4=', 'Frontend dev learning Python for data analysis.'),
+('Diana Prince', 'diana@example.com', 'pbkdf2:sha256:210000:YFaesIlpNiBcjzYmwkhiFg==:1Ummz7GDYTnt5Tw0KuD15XbWbVc/zw7JHdJYz9KiJ8g=', 'Python and ML researcher eager to learn React for building dashboards.');
 
 -- Teaching skills
 -- Alice teaches Java (Bob wants this)

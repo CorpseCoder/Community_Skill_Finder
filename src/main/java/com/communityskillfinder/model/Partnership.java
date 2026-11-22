@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 public class Partnership {
     private int partnershipId;
+    private int senderId;
     private int mentorId;
     private int menteeId;
     private Integer skillId;
@@ -18,6 +19,11 @@ public class Partnership {
     public Partnership() {}
 
     public Partnership(int mentorId, int menteeId, Integer skillId, String status) {
+        this(mentorId, mentorId, menteeId, skillId, status);
+    }
+
+    public Partnership(int senderId, int mentorId, int menteeId, Integer skillId, String status) {
+        this.senderId = senderId;
         this.mentorId = mentorId;
         this.menteeId = menteeId;
         this.skillId = skillId;
@@ -39,6 +45,26 @@ public class Partnership {
 
     public void setPartnershipId(int partnershipId) {
         this.partnershipId = partnershipId;
+    }
+
+    public int getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(int senderId) {
+        this.senderId = senderId;
+    }
+
+    public int getRecipientId() {
+        return senderId == mentorId ? menteeId : mentorId;
+    }
+
+    public boolean isParticipant(int userId) {
+        return userId == mentorId || userId == menteeId;
+    }
+
+    public boolean isRecipient(int userId) {
+        return senderId > 0 && userId == getRecipientId();
     }
 
     public int getMentorId() {

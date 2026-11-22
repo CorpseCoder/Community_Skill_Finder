@@ -12,17 +12,18 @@ import java.util.Optional;
 public class PartnershipDAO {
 
     public Partnership createPartnership(Partnership p) throws SQLException {
-        String sql = "INSERT INTO partnerships (mentor_id, mentee_id, skill_id, status) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO partnerships (requested_by, mentor_id, mentee_id, skill_id, status) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, p.getMentorId());
-            stmt.setInt(2, p.getMenteeId());
+            stmt.setInt(1, p.getSenderId());
+            stmt.setInt(2, p.getMentorId());
+            stmt.setInt(3, p.getMenteeId());
             if (p.getSkillId() != null) {
-                stmt.setInt(3, p.getSkillId());
+                stmt.setInt(4, p.getSkillId());
             } else {
-                stmt.setNull(3, Types.INTEGER);
+                stmt.setNull(4, Types.INTEGER);
             }
-            stmt.setString(4, p.getStatus() != null ? p.getStatus() : "PENDING");
+            stmt.setString(5, p.getStatus() != null ? p.getStatus() : "PENDING");
 
             stmt.executeUpdate();
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -34,8 +35,25 @@ public class PartnershipDAO {
         return p;
     }
 
+    public boolean hasActivePartnership(int mentorId, int menteeId, Integer skillId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM partnerships " +
+                     "WHERE mentor_id = ? AND mentee_id = ? AND status IN ('PENDING', 'ACCEPTED') " +
+                     (skillId != null ? "AND skill_id = ?" : "AND skill_id IS NULL");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, mentorId);
+            stmt.setInt(2, menteeId);
+            if (skillId != null) {
+                stmt.setInt(3, skillId);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
     public Optional<Partnership> findById(int partnershipId) throws SQLException {
-        String sql = "SELECT p.partnership_id, p.mentor_id, p.mentee_id, p.skill_id, p.status, p.created_at, " +
+        String sql = "SELECT p.partnership_id, p.requested_by, p.mentor_id, p.mentee_id, p.skill_id, p.status, p.created_at, " +
                      "u1.name AS mentor_name, u2.name AS mentee_name, s.skill_name " +
                      "FROM partnerships p " +
                      "JOIN users u1 ON p.mentor_id = u1.user_id " +
@@ -56,7 +74,7 @@ public class PartnershipDAO {
 
     public List<Partnership> findByUser(int userId) throws SQLException {
         List<Partnership> list = new ArrayList<>();
-        String sql = "SELECT p.partnership_id, p.mentor_id, p.mentee_id, p.skill_id, p.status, p.created_at, " +
+        String sql = "SELECT p.partnership_id, p.requested_by, p.mentor_id, p.mentee_id, p.skill_id, p.status, p.created_at, " +
                      "u1.name AS mentor_name, u2.name AS mentee_name, s.skill_name " +
                      "FROM partnerships p " +
                      "JOIN users u1 ON p.mentor_id = u1.user_id " +
@@ -189,6 +207,7 @@ public class PartnershipDAO {
                 rs.getString("status"),
                 rs.getTimestamp("created_at")
         );
+        p.setSenderId(rs.getInt("requested_by"));
         p.setMentorName(rs.getString("mentor_name"));
         p.setMenteeName(rs.getString("mentee_name"));
         p.setSkillName(rs.getString("skill_name"));

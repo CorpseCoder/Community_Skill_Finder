@@ -72,12 +72,14 @@ public class ConsoleApp {
     private void handleLogin() throws SQLException {
         System.out.print("Enter your email: ");
         String email = scanner.nextLine().trim();
-        Optional<User> userOpt = userService.getUserByEmail(email);
+        System.out.print("Enter your password: ");
+        String password = scanner.nextLine();
+        Optional<User> userOpt = userService.authenticate(email, password);
         if (userOpt.isPresent()) {
             currentUser = userOpt.get();
             System.out.println("\n[+] Welcome back, " + currentUser.getName() + "!");
         } else {
-            System.out.println("[!] No user found with email: " + email);
+            System.out.println("[!] Invalid email or password.");
         }
     }
 
@@ -211,8 +213,11 @@ public class ConsoleApp {
             }
             System.out.print("Enter Skill ID to remove: ");
             int skillId = Integer.parseInt(scanner.nextLine().trim());
-            userService.removeTeachSkill(currentUser.getUserId(), skillId);
-            System.out.println("[+] Skill removed from your teaching inventory.");
+            if (userService.removeTeachSkill(currentUser.getUserId(), skillId)) {
+                System.out.println("[+] Skill removed from your teaching inventory.");
+            } else {
+                System.out.println("[!] No matching teaching skill found.");
+            }
         }
     }
 
@@ -242,8 +247,11 @@ public class ConsoleApp {
             }
             System.out.print("Enter Skill ID to remove: ");
             int skillId = Integer.parseInt(scanner.nextLine().trim());
-            userService.removeLearnSkill(currentUser.getUserId(), skillId);
-            System.out.println("[+] Skill removed from your learning goals.");
+            if (userService.removeLearnSkill(currentUser.getUserId(), skillId)) {
+                System.out.println("[+] Skill removed from your learning goals.");
+            } else {
+                System.out.println("[!] No matching learning goal found.");
+            }
         }
     }
 
@@ -287,6 +295,10 @@ public class ConsoleApp {
         System.out.println("\n--- SEND PARTNERSHIP REQUEST ---");
         System.out.print("Are you offering to be the MENTOR (1) or requesting as MENTEE (2)? ");
         String role = scanner.nextLine().trim();
+        if (!"1".equals(role) && !"2".equals(role)) {
+            System.out.println("[!] Invalid role. Choose 1 (mentor) or 2 (mentee).");
+            return;
+        }
 
         System.out.print("Enter Partner User ID: ");
         int partnerId = Integer.parseInt(scanner.nextLine().trim());
@@ -298,7 +310,7 @@ public class ConsoleApp {
         int menteeId = "1".equals(role) ? partnerId : currentUser.getUserId();
 
         try {
-            Partnership p = partnershipService.requestPartnership(mentorId, menteeId, skillId);
+            Partnership p = partnershipService.requestPartnership(currentUser.getUserId(), mentorId, menteeId, skillId);
             System.out.println("[+] Partnership request sent! ID: #" + p.getPartnershipId() + " (Status: " + p.getStatus() + ")");
         } catch (Exception e) {
             System.out.println("[!] Failed to send request: " + e.getMessage());

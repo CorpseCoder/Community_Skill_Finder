@@ -59,7 +59,7 @@ mvn exec:java -Dexec.mainClass="com.communityskillfinder.cli.ConsoleApp"
 ### Option B: Direct `javac` & `java`
 ```bash
 # Compile all source files into bin directory
-javac -d bin src/main/java/com/communityskillfinder/*/*.java src/main/java/com/communityskillfinder/model/*.java
+javac -d bin src/main/java/com/communityskillfinder/*/*.java src/main/java/com/communityskillfinder/*/*/*.java src/main/java/com/communityskillfinder/model/*.java
 
 # Run CLI (include mysql-connector-j jar in the classpath)
 java -cp "bin;path/to/mysql-connector-j-8.3.0.jar;src/main/resources" com.communityskillfinder.cli.ConsoleApp
